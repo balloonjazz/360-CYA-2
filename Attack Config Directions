@@ -1,0 +1,47 @@
+*Directory Enumeration
+
+-first we install apache on the victim VM:
+sudo apt install apache2 -y
+sudo systemctl start apache2
+sudo systemctl enable apache2
+
+-Then we create some fake directories within to discover:
+sudo mkdir -p /var/www/html/admin
+sudo mkdir -p /var/www/html/backup
+sudo mkdir -p /var/www/html/login
+echo "admin page" | sudo tee /var/www/html/admin/index.html
+echo "backup page" | sudo tee /var/www/html/backup/index.html
+
+-Next on the Attacker VM we install gobuster
+sudo apt install gobuster -y
+
+-For this attack we willl just be using the common.txt wordlist, so we install it as
+sudo apt install dirb -y
+
+-Then we run gobuster on the kali system
+
+gobuster dir -u http://192.168.56.20 -w /usr/share/wordlists/dirb/common.txt
+
+Then we go to Splunk and see if this attack went through, we do this by doing index=main sourcetype=syslog "gobuster"
+
+*Password Spray Attack
+
+-Firstly on our victim vm we create a number of users, it should at least be more than 3 and make sure to give a few of them matching passwords.
+
+sudo adduser user1
+sudo adduser user2
+sudo adduser user3
+
+nano users.txt
+
+after the nano just put down the user1, 2 and 3.
+After this we create a list of passwords to try on our Attacker VM.
+
+nano passwords.txt
+
+and insert whatever passwords you want on here, some should at least match the ones of your users.
+Then we execute the password spray
+
+hydra -L users.txt -P passwords.txt ssh://192.168.56.20
+
+Finally we check on Splunk by looking for the user1,2,... etc. and see if they are present. If they are the attack works.
